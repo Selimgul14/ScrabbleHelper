@@ -13,7 +13,8 @@ struct ContentView: View {
     @State private var ends = ""
     @State private var length = ""
     @State private var contains = ""
-    @State private var rootWord = ""
+    @State private var usingLetters = ""
+    @State private var maxLength = 10
     @State private var foundWords = [String] ()
     @State var wordList = [String]()
     @State var isShowingResults = false
@@ -24,10 +25,16 @@ struct ContentView: View {
     var body: some View {
         NavigationView{
             List{
-                TextField("Enter your letters", text: $availableLetters)
-                    .autocorrectionDisabled()
-                    .autocapitalization(.none)
-                
+                Section{
+                    TextField("Enter your letters", text: $availableLetters)
+                        .autocorrectionDisabled()
+                        .autocapitalization(.none)
+                    Picker("Maximum length: ", selection: $maxLength){
+                        ForEach(2...15, id:\.self){
+                            Text("\($0)")
+                        }
+                    }
+                }
                 Section{
                     VStack{
                         TextField("Starts", text: $starts)
@@ -36,9 +43,12 @@ struct ContentView: View {
                         TextField("Ends", text: $ends)
                             .autocorrectionDisabled()
                             .autocapitalization(.none)
-                        TextField("Length", text: $length)
+                        TextField("Contains", text: $contains)
                             .autocorrectionDisabled()
-                            .keyboardType(.decimalPad)
+                            .autocapitalization(.none)
+                        TextField("Specific Length", text: $length)
+                            .autocorrectionDisabled()
+                            .keyboardType(.numberPad)
                             .focused($lengthIsFocused)
                     }
                 }
@@ -46,14 +56,15 @@ struct ContentView: View {
                 Section{
                     Button(action: {
                         Task {
-                            isLoading = true
+                            isLoading.toggle()
                             await searchWords()
                         }
                     }, label: {
                         Text("Search words")
                     })
                 }
-                
+
+
                 VStack{
                     NavigationLink{
                         WordsView(words: wordList)
@@ -61,13 +72,13 @@ struct ContentView: View {
                         Text("View results")
                             .foregroundColor(.blue)
                     }
+                } .overlay{
+                    if isLoading{
+                        ProgressView()
+                    }
                 }
                     
-                    if isLoading{
-                        //Section{
-                            ProgressView()
-                        //}
-                    }
+
                 
             }
             .navigationTitle("Scrabble Helper")
@@ -90,16 +101,42 @@ struct ContentView: View {
                 if let startWords = try? String(contentsOf: wordsURL){
                     let allWords = startWords.components(separatedBy: "\n")
                     allWords.forEach{ item in
-                        if isSubsetOf(elements: availableLetters, searchingWord: item) == true && item != ""{
-                            if starts != "" || ends != ""{
-                                if item.hasPrefix(starts) && item.hasSuffix(ends) {
-                                    wordList.append(item)
+                        if starts != "" || ends != "" || contains != ""{
+                            usingLetters = ""
+                            usingLetters.append(availableLetters)
+                            usingLetters.append(contains)
+                            usingLetters.append(starts)
+                            usingLetters.append(ends)
+                            print(usingLetters)
+                            if item.hasPrefix(starts) && item.hasSuffix(ends){
+                                print(usingLetters)
+                                if isSubsetOf(elements: usingLetters, searchingWord: item) == true && item != "" {
+                                    if contains != ""{
+                                        if item.contains(contains){
+                                            wordList.append(item)
+                                        }
+                                    }
+                                    else {
+                                        wordList.append(item)
+                                    }
                                 }
                             }
-                            else{
+                        }
+                        else{
+                            if isSubsetOf(elements: availableLetters, searchingWord: item) && item != ""{
                                 wordList.append(item)
                             }
                         }
+//                        if isSubsetOf(elements: availableLetters, searchingWord: item) == true && item != ""{
+//                            if starts != "" || ends != "" || contains != ""{
+//                                if item.hasPrefix(starts) && item.hasSuffix(ends) {
+//                                    wordList.append(item)
+//                                }
+//                            }
+//                            else{
+//                                wordList.append(item)
+//                            }
+//                        }
                     }
                     isLoading = false
                     return
@@ -108,18 +145,34 @@ struct ContentView: View {
             fatalError("Could not load \(length)letter.txt from bundle")
         }
         else {
-            for i in 2...10{
+            for i in 2..<maxLength + 1{
                 if let wordsURL = Bundle.main.url(forResource: "\(i)letter", withExtension: "txt"){
                     if let startWords = try? String(contentsOf: wordsURL){
                         let allWords = startWords.components(separatedBy: "\n")
                         allWords.forEach{ item in
-                            if isSubsetOf(elements: availableLetters, searchingWord: item) == true && item != ""{
-                                if starts != "" || ends != ""{
-                                    if item.hasPrefix(starts) && item.hasSuffix(ends) {
-                                        wordList.append(item)
+                            if starts != "" || ends != "" || contains != ""{
+                                usingLetters = ""
+                                usingLetters.append(availableLetters)
+                                usingLetters.append(contains)
+                                usingLetters.append(starts)
+                                usingLetters.append(ends)
+                                print(usingLetters)
+                                if item.hasPrefix(starts) && item.hasSuffix(ends){
+                                    print(usingLetters)
+                                    if isSubsetOf(elements: usingLetters, searchingWord: item) == true && item != "" {
+                                        if contains != ""{
+                                            if item.contains(contains){
+                                                wordList.append(item)
+                                            }
+                                        }
+                                        else {
+                                            wordList.append(item)
+                                        }
                                     }
                                 }
-                                else{
+                            }
+                            else{
+                                if isSubsetOf(elements: availableLetters, searchingWord: item) && item != ""{
                                     wordList.append(item)
                                 }
                             }
