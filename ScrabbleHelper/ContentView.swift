@@ -78,8 +78,6 @@ struct ContentView: View {
                     }
                 }
                     
-
-                
             }
             .navigationTitle("Scrabble Helper")
             .toolbar {
@@ -92,6 +90,8 @@ struct ContentView: View {
                 }
             }
         }
+        .navigationViewStyle(StackNavigationViewStyle())
+
     }
     
     func searchWords() async {

@@ -37,6 +37,8 @@ struct WordsView: View {
                 }
             }
         }
+        .navigationViewStyle(StackNavigationViewStyle())
+
     }
     //func calculateScore(word: String) -> Int {
     //    var sum = 0
